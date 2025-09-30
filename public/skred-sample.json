@@ -1,0 +1,5 @@
+[
+  { "id": 101, "region": "Tromsø", "dangerLevel": 3, "headline": "Betydelig snøskredfare" },
+  { "id": 102, "region": "Lofoten og Vesterålen", "dangerLevel": 2, "headline": "Moderat snøskredfare" },
+  { "id": 103, "region": "Sunnmøre", "dangerLevel": 4, "headline": "Stor snøskredfare" }
+]
