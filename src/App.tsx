@@ -2,7 +2,7 @@ import { NavLink, Routes, Route, Navigate } from "react-router-dom";
 import Farer from "./pages/Farer";
 import FareDetalj from "./pages/FareDetalj";
 import Info from "./pages/Info";
-import Snøskred from "./pages/Snøskred";
+import Snoskred from "./pages/Snoskred";
 import Flom from "./pages/Flom";
 import Jordskred from "./pages/Jordskred";
 import Kvikleireskred from "./pages/Kvikleireskred";
@@ -37,7 +37,7 @@ export default function App() {
           <Route path="/farer" element={<Farer />} />
           <Route path="/farer/:id" element={<FareDetalj />} />
           <Route path="/info" element={<Info />} />
-          <Route path="/snoskred" element={<Snøskred />} />
+          <Route path="/snoskred" element={<Snoskred />} />
           <Route path="/snoskred/region/:id" element={<RegionDetail />} />
           <Route path="/flom" element={<Flom />} />
           <Route path="/jordskred" element={<Jordskred />} />

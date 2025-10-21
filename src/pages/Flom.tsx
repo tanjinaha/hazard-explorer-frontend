@@ -1,100 +1,171 @@
 // src/pages/Flom.tsx
-import { useEffect, useState } from "react";
-import Kilde from "@/components/Kilde";
+// "Flom for barn" – enkel, gøy og lærerik side med fakta + mini-quiz + stjerner.
+// Ingen ekstra biblioteker – kun React + Tailwind.
 
-type FloodWarning = {
-  Id: number;
-  WarningText: string;
-  WarningTitle?: string;
-  ActivityLevel?: number | null;
-  ValidFrom?: string;
-  ValidTo?: string;
-};
+import React, { useMemo, useState } from "react";
 
-const COUNTIES = [
-  { id: 3,  name: "Oslo" },
-  { id: 30, name: "Viken" },
-  { id: 34, name: "Innlandet" },
-  { id: 46, name: "Vestland" },
-  { id: 54, name: "Troms og Finnmark" },
-];
+type Svar = "A" | "B" | "C" | null;
 
 export default function Flom() {
-  const [county, setCounty] = useState<number>(3);
-  const [warnings, setWarnings] = useState<FloodWarning[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // norsk: poeng/stjerner totalt på denne siden
+  const [stjerner, setStjerner] = useState(0);
 
-  const buildUrl = (countyId: number) =>
-    `/nve/hydrology/forecast/flood/v1.0.10/api/Warning/County/${countyId}`;
+  // norsk: tilfeldig morsom fakta (endre/utvid listen når du vil)
+  const fakta = useMemo(
+    () => [
+      "Flom kan komme av mye regn på kort tid.",
+      "Elver kan vokse når snø smelter fort om våren.",
+      "Trær og gress kan bremse vannet og hjelpe mot flom.",
+      "Ikke gå gjennom dype vannpytter – de kan være farlige.",
+    ],
+    []
+  );
+  const [faktaIdx, setFaktaIdx] = useState(0);
+  const nesteFakta = () => setFaktaIdx((i) => (i + 1) % fakta.length);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
+  // norsk: én enkel quizoppgave (du kan legge til flere senere)
+  const [valg, setValg] = useState<Svar>(null);
+  const [svarLåst, setSvarLåst] = useState(false);
+  const riktig: Svar = "B"; // riktig svar-alternativ
 
-    fetch(buildUrl(county), { headers: { Accept: "application/json" } })
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : [data].filter(Boolean);
-        setWarnings(list);
-      })
-      .catch((e: any) => setError(String(e?.message ?? e)))
-      .finally(() => setLoading(false));
-  }, [county]);
+  const bekreft = () => {
+    if (valg === null) return;
+    setSvarLåst(true);
+    if (valg === riktig) setStjerner((s) => s + 1);
+  };
+
+  const nullstill = () => {
+    setValg(null);
+    setSvarLåst(false);
+  };
+
+  // norsk: enkel badge-komponent
+  const Badge = ({ children }: { children: React.ReactNode }) => (
+    <span className="inline-flex items-center rounded-full bg-sky-100 text-sky-800 px-2.5 py-0.5 text-xs font-semibold">
+      {children}
+    </span>
+  );
 
   return (
-    <div style={{ padding: 16 }}>
-      <h1>Flom (Flood)</h1>
-      <p>Velg fylke for å se flomvarsler fra NVE.</p>
+    <div className="container mx-auto max-w-3xl p-6 space-y-6">
+      {/* Tittel */}
+      <h1 className="text-3xl font-bold">Flom i Norge</h1>
 
-      <label style={{ display: "block", margin: "12px 0" }}>
-        Fylke:{" "}
-        <select value={county} onChange={(e) => setCounty(Number(e.target.value))}>
-          {COUNTIES.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      {/* Intro-kort */}
+      <div className="rounded-2xl border bg-white shadow-sm p-5 space-y-3">
+        <Badge>For barn</Badge>
+        <p className="text-slate-700">
+          <strong>Flom</strong> skjer når det blir så mye vann at elver renner over og
+          vannet sprer seg ut. Det kan skje etter kraftig regn, rask snøsmelting
+          eller når avløp blir tette. Vi kan være trygge ved å holde oss unna
+          bruer og elvekanter når vannet er høyt.
+        </p>
 
-      {loading && <p>Laster…</p>}
-      {error && <p style={{ color: "crimson" }}>Feil: {error}</p>}
-
-      {!loading && !error && (
-        <>
-          <p>
-            Fant {warnings.length} varsel{warnings.length === 1 ? "" : "er"} for{" "}
-            {COUNTIES.find((c) => c.id === county)?.name}.
+        {/* Morsom fakta + knapp */}
+        <div className="rounded-xl bg-sky-50 border p-4">
+          <p className="text-slate-800">
+            <strong>Morsom fakta:</strong> {fakta[faktaIdx]}
           </p>
+          <button
+            onClick={nesteFakta}
+            className="mt-2 inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm hover:bg-sky-100"
+          >
+            Ny fakta 🔁
+          </button>
+        </div>
 
-          <ul style={{ marginTop: 12 }}>
-            {warnings.map((w) => (
-              <li key={w.Id} style={{ marginBottom: 12 }}>
-                <strong>
-                  {w.WarningTitle ?? "Flomvarsel"}{" "}
-                  {typeof w.ActivityLevel === "number" ? `(nivå ${w.ActivityLevel})` : ""}
-                </strong>
-                <div>{w.WarningText}</div>
-                <small>
-                  Gyldig:{" "}
-                  {w.ValidFrom ? new Date(w.ValidFrom).toLocaleString() : "ukjent"} –{" "}
-                  {w.ValidTo ? new Date(w.ValidTo).toLocaleString() : "ukjent"}
-                </small>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+        {/* Sikkerhetsråd – kort liste */}
+        <ul className="list-disc pl-5 text-slate-700 space-y-1">
+          <li>Hold deg unna elver og bekker når vannet er høyt.</li>
+          <li>Ikke gå eller kjør gjennom vann som dekker veien.</li>
+          <li>Følg med på værvarsel og meldinger fra kommunen.</li>
+        </ul>
+      </div>
 
-      <Kilde>
-        NVE – Varsom Flood API — endpoint:{" "}
-        <code>/hydrology/forecast/flood/v1.0.10/api/Warning/County/&lt;fylkeId&gt;</code>. Se også{" "}
-        <a href="https://www.varsom.no" target="_blank" rel="noopener noreferrer">
-          varsom.no
-        </a>.
-      </Kilde>
+      {/* Mini-quiz */}
+      <div className="rounded-2xl border bg-white shadow-sm p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Mini-quiz 💧</h2>
+          <div className="text-sm">
+            Dine stjerner: <span className="font-bold">{stjerner} ⭐</span>
+          </div>
+        </div>
+
+        <p className="mt-2 text-slate-700">
+          Hvorfor kan det bli flom om våren i Norge?
+        </p>
+
+        <div className="mt-3 grid gap-2">
+          <label className={`flex items-center gap-2 rounded-lg border p-2 cursor-pointer ${valg==="A" ? "ring-2 ring-slate-400" : ""}`}>
+            <input
+              type="radio"
+              name="q1"
+              disabled={svarLåst}
+              checked={valg === "A"}
+              onChange={() => setValg("A")}
+            />
+            A) Fordi vinden blåser mye.
+          </label>
+
+          <label className={`flex items-center gap-2 rounded-lg border p-2 cursor-pointer ${valg==="B" ? "ring-2 ring-slate-400" : ""}`}>
+            <input
+              type="radio"
+              name="q1"
+              disabled={svarLåst}
+              checked={valg === "B"}
+              onChange={() => setValg("B")}
+            />
+            B) Fordi snø smelter fort og mye vann renner i elver. {/* riktig */}
+          </label>
+
+          <label className={`flex items-center gap-2 rounded-lg border p-2 cursor-pointer ${valg==="C" ? "ring-2 ring-slate-400" : ""}`}>
+            <input
+              type="radio"
+              name="q1"
+              disabled={svarLåst}
+              checked={valg === "C"}
+              onChange={() => setValg("C")}
+            />
+            C) Fordi bladene faller av trærne.
+          </label>
+        </div>
+
+        {/* Knapper og tilbakemelding */}
+        <div className="mt-3 flex items-center gap-3">
+          {!svarLåst ? (
+            <button
+              onClick={bekreft}
+              disabled={valg === null}
+              className="rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-sm disabled:opacity-50"
+            >
+              Svar
+            </button>
+          ) : (
+            <>
+              {valg === riktig ? (
+                <span className="text-emerald-700 font-semibold">
+                  Riktig! ⭐ Godt jobbet!
+                </span>
+              ) : (
+                <span className="text-rose-700 font-semibold">
+                  Ikke helt – prøv igjen!
+                </span>
+              )}
+              <button
+                onClick={nullstill}
+                className="rounded-lg border px-3 py-1.5 text-sm hover:bg-slate-50"
+              >
+                Prøv på nytt
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Kilde */}
+      <div className="text-xs text-slate-500">
+        Kilde: Meteorologisk institutt, NVE og læreplan i naturfag/geografi.
+      </div>
     </div>
   );
 }
