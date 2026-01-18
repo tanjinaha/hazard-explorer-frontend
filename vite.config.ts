@@ -5,10 +5,12 @@ import path from "node:path";
 
 export default defineConfig({
   plugins: [react()],
-  resolve: { alias: { "@": path.resolve(__dirname, "src") } },
+  resolve: {
+    alias: { "@": path.resolve(__dirname, "src") },
+  },
   server: {
     proxy: {
-      // Varsom – avalanche forecast
+      // 🌨️ NVE Varsom APIs (avalanche, landslide, flood)
       "/nve": {
         target: "https://api01.nve.no",
         changeOrigin: true,
@@ -16,15 +18,13 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/nve/, ""),
       },
 
-      // MET Norway – weather data
+      // 🌦️ MET Norway (weather forecasts etc.)
       "/met": {
         target: "https://api.met.no",
         changeOrigin: true,
         secure: true,
         rewrite: (p) => p.replace(/^\/met/, ""),
       },
-
-      // ❌ No Regobs proxy here (we skip it for now)
     },
   },
 });

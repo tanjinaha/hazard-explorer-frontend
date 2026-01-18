@@ -1,111 +1,135 @@
 // src/pages/Snoskred.tsx
-// Enkel, elevvennlig side for snøskred.
-// Viser: tittel/intro, region-velger, "Siste varsel", graf, læringskort og kilde.
+// "Snøskred for barn" – enkel, gøy og lærerik side med fakta + mini-quiz + stjerner.
 
 import React, { useMemo, useState } from "react";
-import SisteVarsel from "@/components/SisteVarsel";
-import SnoskredGraf from "@/components/SnoskredGraf";
 
-// Norsk: noen vanlige skredregioner (du kan utvide senere)
-const REGIONS = [
-  { id: 3004, navn: "Lyngen" },
-  { id: 3027, navn: "Indre Sogn" },
-  { id: 3016, navn: "Salten" },
-  { id: 3031, navn: "Tromsø" },
-  { id: 3030, navn: "Hallingdal" },
-];
+type Svar = "A" | "B" | "C" | null;
 
-export default function Snøskred() {
-  // Valgt region-ID styrer både "Siste varsel" og grafen
-  const [regionId, setRegionId] = useState<number>(3004);
+export default function Snoskred() {
+  const [stjerner, setStjerner] = useState(0);
 
-  // Visningsnavn for valgt region
-  const regionNavn = useMemo(
-    () => REGIONS.find((r) => r.id === regionId)?.navn || `Region ${regionId}`,
-    [regionId]
+  const fakta = useMemo(
+    () => [
+      "Snøskred skjer når mye snø plutselig raser ned en bakke.",
+      "Vind kan flytte snø og lage farlige fokksnøflak.",
+      "Sol og mildvær kan gjøre snøen våt og tung – da øker faren.",
+      "Hold avstand til bratte fjellsider når varselet sier fare.",
+    ],
+    []
+  );
+  const [faktaIdx, setFaktaIdx] = useState(0);
+  const nesteFakta = () => setFaktaIdx((i) => (i + 1) % fakta.length);
+
+  const [valg, setValg] = useState<Svar>(null);
+  const [svarLåst, setSvarLåst] = useState(false);
+  const riktig: Svar = "C";
+
+  const bekreft = () => {
+    if (valg === null) return;
+    setSvarLåst(true);
+    if (valg === riktig) setStjerner((s) => s + 1);
+  };
+
+  const nullstill = () => {
+    setValg(null);
+    setSvarLåst(false);
+  };
+
+  const Badge = ({ children }: { children: React.ReactNode }) => (
+    <span className="inline-flex items-center rounded-full bg-sky-100 text-sky-800 px-2.5 py-0.5 text-xs font-semibold">
+      {children}
+    </span>
   );
 
   return (
     <div className="container mx-auto max-w-3xl p-6 space-y-6">
-      {/* --- Tittel og introduksjonstekst --- */}
       <h1 className="text-3xl font-bold">Snøskred i Norge</h1>
 
-      <p className="text-slate-700">
-        Snøskred skjer når store mengder snø løsner og sklir raskt ned fjellsider.
-        Slike skred kan utløses naturlig (på grunn av vær, vind og temperatur)
-        eller av mennesker. Snøskred er en viktig naturfare i Norge, spesielt i fjellområder.
-      </p>
+      <div className="rounded-2xl border bg-white shadow-sm p-5 space-y-3">
+        <Badge>For barn</Badge>
+        <p className="text-slate-700">
+          <strong>Snøskred</strong> kan skje i bratte fjellsider når snøen blir ustabil.
+          Faren øker ved mye nysnø, sterk vind, eller når været blir varmt. Vi kan være
+          trygge ved å følge varsel, holde avstand til bratte sider og ikke gå i skredbaner.
+        </p>
 
-      <p className="text-slate-700">
-        Gjennom vinteren endrer forholdene seg raskt. Vind, nysnø og temperatur
-        påvirker stabiliteten i snødekket, og dermed hvor stor risikoen for skred er.
-      </p>
-
-      {/* --- Sikkerhetsråd-boks --- */}
-      <div className="rounded-lg border bg-amber-50 p-4 text-sm">
-        <strong>Råd:</strong> Unngå <em>brattheng</em> (bratte fjellsider over 30°),
-        og hold avstand til utløpsområder når faregraden er høy.
-      </div>
-
-      {/* --- Velger for region (nedtrekk) --- */}
-      <div className="flex items-center gap-2">
-        <label className="text-sm text-slate-700">Velg region:</label>
-        <select
-          className="border rounded px-2 py-1"
-          value={regionId}
-          onChange={(e) => setRegionId(Number(e.target.value))}
-        >
-          {REGIONS.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.navn}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* --- Siste varsel (ser langt nok tilbake for å alltid finne sesongdata) --- */}
-      <SisteVarsel regionId={regionId} monthsBack={24} />
-
-      {/* --- Grafen som viser faregrad over tid --- */}
-      {/* Merk: Vi bruker 24 måneder for å få historikk også utenfor sesong. */}
-      <SnoskredGraf regionId={regionId} monthsBack={24} />
-
-      {/* --- Liten forklaring under grafen (med regionnavn) --- */}
-      <p className="text-sm text-slate-600">
-        Grafen viser utviklingen i skredfare (faregrad) for regionen <strong>{regionNavn}</strong>.
-        Snøskreddata er sesongbasert (mest i vinterhalvåret), derfor vises en lengre periode.
-      </p>
-
-      {/* --- Læringskort: Enkle råd + Nyttige begreper --- */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Enkle råd i dag */}
-        <div className="rounded-lg border p-4 bg-white">
-          <h3 className="text-lg font-semibold mb-2">Enkle råd i dag</h3>
-          <ul className="list-disc pl-5 space-y-1 text-slate-700">
-            <li>Sjekk alltid dagens varsel på varsom.no før tur.</li>
-            <li>Unngå brattheng (bratte fjellsider over 30°).</li>
-            <li>Hold avstand til utløpsområder (der snøen kan stoppe).</li>
-            <li>Gå én og én i bratte partier – ikke samlet.</li>
-            <li>Vær fleksibel – snu hvis forholdene er utrygge.</li>
-          </ul>
+        <div className="rounded-xl bg-sky-50 border p-4">
+          <p className="text-slate-800">
+            <strong>Morsom fakta:</strong> {fakta[faktaIdx]}
+          </p>
+          <button
+            onClick={nesteFakta}
+            className="mt-2 inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm hover:bg-sky-100"
+          >
+            Ny fakta 🔁
+          </button>
         </div>
 
-        {/* Nyttige begreper */}
-        <div className="rounded-lg border p-4 bg-white">
-          <h3 className="text-lg font-semibold mb-2">Nyttige begreper</h3>
-          <ul className="list-disc pl-5 space-y-1 text-slate-700">
-            <li><strong>Brattheng:</strong> Bratt fjell- eller bakkeside (&gt; 30°).</li>
-            <li><strong>Faregrad:</strong> Skala 1–5 (Lav → Meget stor).</li>
-            <li><strong>Utløsningsområde:</strong> Området der skredet starter.</li>
-            <li><strong>Utløpsområde:</strong> Området der snømassene ender.</li>
-            <li><strong>Skredproblem:</strong> Hovedårsaken (f.eks. fokksnø, våte løssnøskred).</li>
-          </ul>
-        </div>
-      </section>
+        <ul className="list-disc pl-5 text-slate-700 space-y-1">
+          <li>Følg med på snøskredvarsel før du går på tur.</li>
+          <li>Unngå bratte heng når faren er høy.</li>
+          <li>Hold god avstand til utløpsområder.</li>
+        </ul>
+      </div>
 
-      {/* --- Kilde (datakilde) --- */}
-      <div className="text-xs text-slate-500 mt-2">
-        Kilde: NVE Varsom (offentlige data).
+      <div className="rounded-2xl border bg-white shadow-sm p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Mini-quiz 🏔️</h2>
+          <div className="text-sm">
+            Dine stjerner: <span className="font-bold">{stjerner} ⭐</span>
+          </div>
+        </div>
+
+        <p className="mt-2 text-slate-700">
+          Hva kan gjøre snøen mer ustabil og øke skredfaren?
+        </p>
+
+        <div className="mt-3 grid gap-2">
+          <label className={`flex items-center gap-2 rounded-lg border p-2 cursor-pointer ${valg==="A" ? "ring-2 ring-slate-400" : ""}`}>
+            <input type="radio" name="q1" disabled={svarLåst} checked={valg==="A"} onChange={() => setValg("A")} />
+            A) Kuldegrader hele tiden.
+          </label>
+
+          <label className={`flex items-center gap-2 rounded-lg border p-2 cursor-pointer ${valg==="B" ? "ring-2 ring-slate-400" : ""}`}>
+            <input type="radio" name="q1" disabled={svarLåst} checked={valg==="B"} onChange={() => setValg("B")} />
+            B) Ingen vind og gammel, hard snø.
+          </label>
+
+          <label className={`flex items-center gap-2 rounded-lg border p-2 cursor-pointer ${valg==="C" ? "ring-2 ring-slate-400" : ""}`}>
+            <input type="radio" name="q1" disabled={svarLåst} checked={valg==="C"} onChange={() => setValg("C")} />
+            C) Sterk vind som flytter snø, mye nysnø eller brå varme. {/* riktig */}
+          </label>
+        </div>
+
+        <div className="mt-3 flex items-center gap-3">
+          {!svarLåst ? (
+            <button
+              onClick={bekreft}
+              disabled={valg === null}
+              className="rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-sm disabled:opacity-50"
+            >
+              Svar
+            </button>
+          ) : (
+            <>
+              {valg === riktig ? (
+                <span className="text-emerald-700 font-semibold">Riktig! ⭐ Godt jobbet!</span>
+              ) : (
+                <span className="text-rose-700 font-semibold">Ikke helt – prøv igjen!</span>
+              )}
+              <button
+                onClick={nullstill}
+                className="rounded-lg border px-3 py-1.5 text-sm hover:bg-slate-50"
+              >
+                Prøv på nytt
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="text-xs text-slate-500">
+        Kilde: Varsom og læreplan i naturfag/geografi.
       </div>
     </div>
   );
